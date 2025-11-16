@@ -1,47 +1,556 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#1A1A1A" />
-    <meta
-      name="description"
-      content="KAVIA AI Application"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, user-scalable=no"
+  />
+  <title>Ocean Pro Calculator</title>
+  <meta name="description" content="Modern responsive calculator app with keyboard support." />
+  <style>
+    :root{
+      --primary:#2563EB;          /* Ocean Professional primary */
+      --accent:#F59E0B;           /* amber accent */
+      --error:#EF4444;            /* error */
+      --bg:#f9fafb;               /* page background */
+      --surface:#ffffff;          /* card surface */
+      --text:#111827;             /* main text */
+      --muted:#6B7280;            /* secondary text */
+      --shadow: 0 10px 25px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.06);
+      --radius: 16px;
+      --radius-sm: 12px;
+      --focus: 0 0 0 3px rgba(37, 99, 235, .35);
+    }
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <!-- Load Inter font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <title>KAVIA App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+    }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color: var(--text);
+      background: linear-gradient(135deg, rgba(59,130,246,0.10) 0%, rgba(249,250,251,1) 60%);
+      background-color: var(--bg);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+    .calculator{
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      border: 1px solid rgba(17,24,39,0.06);
+    }
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
+    .header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(17,24,39,0.06);
+      background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,1));
+      backdrop-filter: blur(6px);
+    }
+    .title{
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: .2px;
+      color: var(--text);
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .pill{
+      font-size: 11px;
+      color: #0B4ACB;
+      background: rgba(37, 99, 235, 0.10);
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .display{
+      padding: 18px;
+      display: grid;
+      gap: 6px;
+      min-height: 110px;
+      background:
+        radial-gradient(1200px 1200px at 100% -50%, rgba(37,99,235,0.08), transparent 60%),
+        linear-gradient(180deg, rgba(248,250,252,0.5), rgba(255,255,255,0.3) 40%, rgba(255,255,255,1));
+    }
+
+    .prev{
+      min-height: 22px;
+      color: var(--muted);
+      font-size: 14px;
+      letter-spacing: .3px;
+      text-align: right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      user-select: none;
+      -webkit-user-select:none;
+    }
+    .curr{
+      font-size: clamp(28px, 6vw, 40px);
+      font-weight: 800;
+      text-align: right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+    }
+
+    .grid{
+      padding: 14px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+    }
+
+    .btn{
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      appearance: none;
+      border: 1px solid rgba(17,24,39,0.08);
+      background: #fff;
+      color: var(--text);
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      box-shadow: 0 2px 0 rgba(0,0,0,0.04);
+      transition: transform .06s ease, box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(0,0,0,0.06);
+    }
+    .btn:active{
+      transform: translateY(0);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+    }
+    .btn:focus-visible{
+      outline: none;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.06), var(--focus);
+    }
+
+    .btn.op{
+      background: linear-gradient(180deg, rgba(37,99,235,.06), rgba(37,99,235,.02));
+      color: var(--primary);
+      border-color: rgba(37,99,235,.25);
+    }
+    .btn.control{
+      background: linear-gradient(180deg, rgba(245,158,11,.10), rgba(245,158,11,.04));
+      color: #8a5404;
+      border-color: rgba(245,158,11,.35);
+    }
+    .btn.control.danger{
+      background: linear-gradient(180deg, rgba(239,68,68,.12), rgba(239,68,68,.05));
+      color: #7a0f0f;
+      border-color: rgba(239,68,68,.35);
+    }
+    .btn.equals{
+      background: linear-gradient(180deg, var(--primary), #1e49c9);
+      color: #fff;
+      border-color: rgba(0,0,0,0.0);
+      box-shadow: 0 8px 16px rgba(37,99,235,0.30);
+    }
+    .btn.equals:hover{
+      box-shadow: 0 14px 24px rgba(37,99,235,0.35);
+    }
+
+    .span-2{
+      grid-column: span 2;
+    }
+
+    .footer-hint{
+      font-size: 12px;
+      color: var(--muted);
+      text-align:center;
+      padding-top: 6px;
+      padding-bottom: 8px;
+      user-select:none;
+    }
+
+    @media (max-width: 380px){
+      .btn{ padding: 14px; font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="calculator" role="application" aria-label="Calculator application">
+    <div class="header" aria-hidden="true">
+      <div class="title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="4" stroke="#2563EB" stroke-width="2"/>
+          <path d="M8 7h8M8 12h8M8 17h8" stroke="#2563EB" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Ocean Pro
+        <span class="pill">Calculator</span>
+      </div>
+    </div>
+    <section class="display" aria-live="polite" aria-atomic="true">
+      <div id="prev" class="prev" aria-label="Previous expression"></div>
+      <div id="curr" class="curr" aria-label="Current input or result">0</div>
+    </section>
+
+    <section class="grid" role="group" aria-label="Calculator buttons">
+      <!-- Row 1 -->
+      <button class="btn control danger" data-action="clear" aria-label="Clear all (C)" title="Clear (Esc)">C</button>
+      <button class="btn control" data-action="delete" aria-label="Delete last (Backspace)" title="Backspace">⌫</button>
+      <button class="btn op" data-value="/" aria-label="Divide" title="/">÷</button>
+      <button class="btn op" data-value="*" aria-label="Multiply" title="*">×</button>
+
+      <!-- Row 2 -->
+      <button class="btn" data-value="7" aria-label="Seven">7</button>
+      <button class="btn" data-value="8" aria-label="Eight">8</button>
+      <button class="btn" data-value="9" aria-label="Nine">9</button>
+      <button class="btn op" data-value="-" aria-label="Subtract" title="-">−</button>
+
+      <!-- Row 3 -->
+      <button class="btn" data-value="4" aria-label="Four">4</button>
+      <button class="btn" data-value="5" aria-label="Five">5</button>
+      <button class="btn" data-value="6" aria-label="Six">6</button>
+      <button class="btn op" data-value="+" aria-label="Add" title="+">+</button>
+
+      <!-- Row 4 -->
+      <button class="btn" data-value="1" aria-label="One">1</button>
+      <button class="btn" data-value="2" aria-label="Two">2</button>
+      <button class="btn" data-value="3" aria-label="Three">3</button>
+      <button class="btn equals" data-action="equals" aria-label="Equals" title="Enter or =">=</button>
+
+      <!-- Row 5 -->
+      <button class="btn span-2" data-value="0" aria-label="Zero">0</button>
+      <button class="btn" data-action="decimal" aria-label="Decimal point">.</button>
+      <button class="btn op" data-value="/" aria-label="Divide duplicate mobile ease" title="/">/</button>
+    </section>
+    <div class="footer-hint" aria-hidden="true">
+      Keyboard: 0–9, + − × ÷, Enter (=), Backspace (⌫), Esc (C), .
+    </div>
+  </main>
+
+  <script>
+    (function(){
+      'use strict';
+
+      const prevEl = document.getElementById('prev');
+      const currEl = document.getElementById('curr');
+      const container = document.querySelector('.grid');
+
+      // State
+      let current = '0';          // as string buffer for current token
+      let tokens = [];            // array of numbers and operators as strings
+      let lastAction = null;      // 'number' | 'operator' | 'equals' | 'clear' | 'delete' | 'decimal'
+      const MAX_LEN = 14;
+
+      function updateDisplay(){
+        currEl.textContent = currentFormatted();
+        prevEl.textContent = renderPrev();
+      }
+
+      function currentFormatted(){
+        // keep raw 'Error'
+        if (current === 'Error') return 'Error';
+        // handle a dangling negative sign or "0." gracefully
+        if (current === '-' || current === '0.' || (current.endsWith('.') && current.split('.').length === 2)) {
+          return current;
+        }
+        // Trim to max length with rounding
+        const num = Number(current);
+        if (!isFinite(num)) return 'Error';
+
+        const abs = Math.abs(num);
+        let out;
+
+        // Choose formatting based on magnitude
+        if (abs !== 0 && (abs >= 1e12 || abs < 1e-6)) {
+          out = num.toExponential(6);
+        } else {
+          // Round to fit MAX_LEN
+          const digits = 12;
+          out = num.toLocaleString(undefined, {
+            maximumFractionDigits: digits
+          });
+        }
+
+        // Ensure length limit
+        if (out.replace(/,/g,'').length > MAX_LEN + 2) {
+          out = num.toExponential(6);
+        }
+        return out;
+      }
+
+      function renderPrev(){
+        const expr = tokens.join(' ');
+        return expr;
+      }
+
+      function isOperator(ch){
+        return ch === '+' || ch === '-' || ch === '*' || ch === '/';
+      }
+
+      function pushNumberFromCurrent(){
+        // remove trailing dot
+        if (current.endsWith('.')) current = current.slice(0, -1);
+        if (current === '' || current === '-') return; // no number to push
+        tokens.push(current);
+      }
+
+      function clearAll(){
+        current = '0';
+        tokens = [];
+        lastAction = 'clear';
+        updateDisplay();
+      }
+
+      function deleteLast(){
+        if (lastAction === 'equals') {
+          // after equals, backspace resets
+          clearAll();
+          return;
+        }
+        if (current.length <= 1 || (current.length === 2 && current.startsWith('-'))) {
+          current = '0';
+        } else {
+          current = current.slice(0,-1);
+        }
+        lastAction = 'delete';
+        updateDisplay();
+      }
+
+      function appendDigit(d){
+        if (lastAction === 'equals') {
+          // start new computation
+          tokens = [];
+          current = '0';
+        }
+        if (current === '0' && d === '0') {
+          lastAction = 'number';
+          return updateDisplay();
+        }
+        if (current === '0' && d !== '0') {
+          current = d;
+        } else if (current === '-' && d === '0') {
+          // allow "-0"
+          current = '-0';
+        } else {
+          // prevent overflow
+          if (current.replace('-', '').replace('.', '').length >= MAX_LEN) {
+            return; // ignore extra digits
+          }
+          current += d;
+        }
+        lastAction = 'number';
+        updateDisplay();
+      }
+
+      function insertDecimal(){
+        if (lastAction === 'equals') {
+          tokens = [];
+          current = '0';
+        }
+        if (!current.includes('.')) {
+          current += current === '' || current === '-' ? '0.' : '.';
+        }
+        lastAction = 'decimal';
+        updateDisplay();
+      }
+
+      function applyOperator(op){
+        if (lastAction === 'equals') {
+          // Continue from result: tokens = [current]
+          tokens = [];
+          // current already holds result; push it
+          pushNumberFromCurrent();
+        } else {
+          // Handle cases
+          if (lastAction === 'operator') {
+            // Replace operator if user changes mind
+            if (tokens.length > 0 && isOperator(tokens[tokens.length - 1])) {
+              tokens[tokens.length - 1] = op;
+              lastAction = 'operator';
+              updateDisplay();
+              return;
+            }
+          } else {
+            // Push number if exists
+            pushNumberFromCurrent();
+          }
+        }
+
+        // Allow starting with negative number
+        if (tokens.length === 0 && current === '0' && op === '-') {
+          current = '-';
+          lastAction = 'operator';
+          updateDisplay();
+          return;
+        }
+
+        tokens.push(op);
+        // reset current buffer
+        current = '0';
+        lastAction = 'operator';
+        updateDisplay();
+      }
+
+      function equals(){
+        // finalize number
+        pushNumberFromCurrent();
+        // Remove trailing operator if any
+        if (tokens.length && isOperator(tokens[tokens.length - 1])) {
+          tokens.pop();
+        }
+        const result = evaluateTokens(tokens);
+        if (result === null || !isFinite(result)) {
+          current = 'Error';
+          tokens = [];
+        } else {
+          current = sanitizeNumberString(result);
+          tokens = []; // ready for next chain
+        }
+        lastAction = 'equals';
+        updateDisplay();
+      }
+
+      function sanitizeNumberString(n){
+        if (!isFinite(n)) return 'Error';
+        // Round to reasonable precision
+        let out = Number(n.toFixed(12));
+        // strip -0
+        if (Object.is(out, -0)) out = 0;
+        return String(out);
+      }
+
+      // Shunting-yard to RPN, then evaluate RPN
+      function evaluateTokens(toks){
+        if (!toks || toks.length === 0) return 0;
+
+        const output = [];
+        const ops = [];
+        const prec = { '+':1, '-':1, '*':2, '/':2 };
+
+        function flushOps(op){
+          while (ops.length){
+            const top = ops[ops.length - 1];
+            if (!isOperator(top)) break;
+            if (prec[top] >= prec[op]) {
+              output.push(ops.pop());
+            } else break;
+          }
+        }
+
+        for (let i = 0; i < toks.length; i++){
+          const t = toks[i];
+          if (isOperator(t)) {
+            flushOps(t);
+            ops.push(t);
+          } else {
+            // number token validation
+            if (!isValidNumberToken(t)) return null;
+            output.push(t);
+          }
+        }
+        while (ops.length) output.push(ops.pop());
+
+        // Evaluate RPN
+        const stack = [];
+        for (const t of output){
+          if (!isOperator(t)) {
+            stack.push(Number(t));
+          } else {
+            const b = stack.pop();
+            const a = stack.pop();
+            if (a === undefined || b === undefined) return null;
+            let r;
+            switch(t){
+              case '+': r = a + b; break;
+              case '-': r = a - b; break;
+              case '*': r = a * b; break;
+              case '/':
+                if (b === 0) return null; // division by zero -> Error
+                r = a / b; break;
+              default: return null;
+            }
+            stack.push(r);
+          }
+        }
+        if (stack.length !== 1) return null;
+        return stack[0];
+      }
+
+      function isValidNumberToken(s){
+        // valid numbers like "-12.34", "0.1", "5"
+        if (s === '-' || s === '') return false;
+        return /^-?\d+(\.\d+)?$/.test(s);
+      }
+
+      // Event wiring
+      container.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        const action = btn.getAttribute('data-action');
+        const val = btn.getAttribute('data-value');
+
+        if (action === 'clear') return clearAll();
+        if (action === 'delete') return deleteLast();
+        if (action === 'decimal') return insertDecimal();
+        if (action === 'equals') return equals();
+
+        if (val !== null) {
+          if (isOperator(val)) {
+            applyOperator(val);
+          } else {
+            appendDigit(val);
+          }
+        }
+      });
+
+      // Keyboard support
+      window.addEventListener('keydown', (e)=>{
+        const k = e.key;
+
+        if ((k >= '0' && k <= '9')) {
+          e.preventDefault();
+          return appendDigit(k);
+        }
+        if (k === '.' ) {
+          e.preventDefault();
+          return insertDecimal();
+        }
+        if (k === '+' || k === '-' || k === '*' || k === '/') {
+          e.preventDefault();
+          return applyOperator(k);
+        }
+        if (k === 'Enter' || k === '=') {
+          e.preventDefault();
+          return equals();
+        }
+        if (k === 'Backspace') {
+          e.preventDefault();
+          return deleteLast();
+        }
+        if (k === 'Escape') {
+          e.preventDefault();
+          return clearAll();
+        }
+      });
+
+      // Initialize
+      updateDisplay();
+    })();
+  </script>
+</body>
 </html>
